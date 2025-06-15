@@ -33,12 +33,21 @@ Usage
 ---------
 
 You can use the following command to generate an image, using `--output` to specify the storage location of the image, defaulting to `out.png`.
+If you set `--download-hf True`, the model will be downloaded from HuggingFace. Or you can put the model in the `./models/` directory and run it directly
 
+from https://huggingface.co/lodestones/Chroma download chroma-unlocked-v*.safetensors **Rename and Save** in 
+./models/chroma/chroma.safetensors
+
+from https://huggingface.co/black-forest-labs/FLUX.1-dev download text_encoder_2, tokenizer_2 and ae.savetensors
+./models/t5/text_encoder_2
+./models/t5/tokenizer_2
+./models/vae/ae.savetensors
 
 ```shell
 python txt2image.py --image-size 1024x1024 \
     --neg-prompt 'low quality, ugly, unfinished, out of focus, deformed, disfigure, blurry, smudged, restricted palette, flat colors' \
     --step 28\
+    --download-hf True \
     --seed 666\
     --skip-cfg-steps 0 \
     --cfg 4 \
@@ -46,7 +55,6 @@ python txt2image.py --image-size 1024x1024 \
     --verbose \
     'Extreme close-up photograph of a single tiger eye, direct frontal view. The iris is very detailed and the pupil resembling a dark void. The word \"Chroma\" is across the lower portion of the image in large white stylized letters, with brush strokes resembling those made with Japanese calligraphy. Each strand of the thick fur is highly detailed and distinguishable. Natural lighting to capture authentic eye shine and depth.'
 ```
-
 
 
 For more parameters, please use the `--help` command to view.
