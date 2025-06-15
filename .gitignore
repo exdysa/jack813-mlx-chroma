@@ -1,0 +1,8 @@
+
+models/
+
+*.ipynb
+
+venv/
+
+*.png
