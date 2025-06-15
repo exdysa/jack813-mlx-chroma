@@ -6,3 +6,5 @@ models/
 venv/
 
 *.png
+
+chroma/__pycache__/
