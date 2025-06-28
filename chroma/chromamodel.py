@@ -181,6 +181,7 @@ class Chroma(nn.Module):
         ## 已验证，与ComfyUI生成版本接近
 
         timestep_guidance = mx.concatenate([distill_timestep, distil_guidance], axis=1).astype(self.dtype)
+        timestep_guidance = timestep_guidance[:, None, :]  # shape: (B, 1, 32)
         timestep_guidance = mx.broadcast_to(timestep_guidance, (batch_size, mod_index_length, 32)).astype(self.dtype)  # (B, 344, 32)
         # mx.save("mlx_timestep_guidance",timestep_guidance.astype(mx.float32))
         
@@ -211,7 +212,7 @@ class Chroma(nn.Module):
                     self.get_modulations(mod_vectors, "double_img", idx=i),
                     self.get_modulations(mod_vectors, "double_txt", idx=i),
                 )
-            (img_mod1, img_mod2), (txt_mod1, txt_mod2) = double_mod
+            # (img_mod1, img_mod2), (txt_mod1, txt_mod2) = double_mod
             # mx.save(f"mlx_double_block_{i}_img_mod1_shift",img_mod1.shift.astype(mx.float32))
             # mx.save(f"mlx_double_block_{i}_img_mod1_scale",img_mod1.scale.astype(mx.float32))
             # mx.save(f"mlx_double_block_{i}_img_mod2_shift",img_mod2.shift.astype(mx.float32))
@@ -251,9 +252,9 @@ class Chroma(nn.Module):
         # mx.save("mlx_final_layer_shift", shift.astype(mx.float32))
         # mx.save("mlx_final_layer_scale", scale.astype(mx.float32))
         img = self.final_layer(img, final_mod)
-        save_dir = "mlx_final"
-        name = "mlx_after_final_img"
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        save_path = os.path.join(save_dir, f"{name}_{timestamp}.npy")
+        # save_dir = "mlx_final"
+        # name = "mlx_after_final_img"
+        # timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        # save_path = os.path.join(save_dir, f"{name}_{timestamp}.npy")
         # mx.save(save_path, img.astype(mx.float32))
         return img

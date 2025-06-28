@@ -44,7 +44,7 @@ if __name__ == "__main__":
         description="Generate images from a textual prompt using stable diffusion"
     )
     parser.add_argument("prompt")
-    parser.add_argument("--neg-prompt",default="")
+    parser.add_argument("--neg-prompt", default="")
     parser.add_argument("--download-hf", type=bool, default=False)
     parser.add_argument("--chroma-path", default="./models/chroma/chroma-unlocked-v36-detail-calibrated.safetensors")
     parser.add_argument("--t5-path", default="./models/t5/text_encoder_2")
@@ -69,7 +69,7 @@ if __name__ == "__main__":
     # parser.add_argument("--fuse-adapter", action="store_true")
     # parser.add_argument("--no-t5-padding", dest="t5_padding", action="store_false")
     args = parser.parse_args()
-
+    print(args.n_images)
     # Load the models
 
     chroma = ChromaPipeline("chroma", download_hf=args.download_hf, chroma_filepath=args.chroma_path, t5_filepath=args.t5_path, tokenizer_filepath=args.tokenizer_path, vae_filepath=args.vae_path, load_quantized=False)
