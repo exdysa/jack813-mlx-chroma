@@ -59,11 +59,12 @@ if __name__ == "__main__":
     parser.add_argument("--skip-cfg-steps", type=int, default=0)
     parser.add_argument("--n-rows", type=int, default=1)
     parser.add_argument("--decoding-batch-size", type=int, default=1)
-    # parser.add_argument("--quantize", "-q", action="store_true")
+    parser.add_argument("--quantize", "-q", type=bool, default=False)
     parser.add_argument("--preload-models", action="store_true")
     parser.add_argument("--output", default="out.png")
     parser.add_argument("--save-raw", action="store_true")
     parser.add_argument("--seed", type=int, default=666)
+
     parser.add_argument("--verbose", "-v", action="store_true")
     # parser.add_argument("--adapter")
     # parser.add_argument("--fuse-adapter", action="store_true")
@@ -72,7 +73,7 @@ if __name__ == "__main__":
     print(args.n_images)
     # Load the models
 
-    chroma = ChromaPipeline("chroma", download_hf=args.download_hf, chroma_filepath=args.chroma_path, t5_filepath=args.t5_path, tokenizer_filepath=args.tokenizer_path, vae_filepath=args.vae_path, load_quantized=False)
+    chroma = ChromaPipeline("chroma", download_hf=args.download_hf, chroma_filepath=args.chroma_path, t5_filepath=args.t5_path, tokenizer_filepath=args.tokenizer_path, vae_filepath=args.vae_path, load_quantized=args.quantize)
     
     if args.preload_models:
         chroma.ensure_models_are_loaded()

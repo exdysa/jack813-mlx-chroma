@@ -74,7 +74,7 @@ import mlx.core as mx
 from chroma import ChromaPipeline
 
 # This will download all the weights from HF hub
-chroma = ChromaPipeline("flux-schnell")
+chroma = ChromaPipeline("chroma")
 
 # Make a generator that returns the latent variables from the reverse diffusion
 # process

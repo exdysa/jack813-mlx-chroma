@@ -79,28 +79,20 @@ def strip_prefix(state_dict, prefix_to_remove):
 
 def load_chroma_model(name: str, hf_download: bool = True, file_path: str=None, quantized=False):
     model = Chroma(configs["chroma"].params)
-    if  quantized:
-        nn.quantize(model, bits=4, group_size=32)
+    
     print(file_path)
     # Load the checkpoint if needed
     if file_path is not None:
         ckpt_path = file_path
     else:
-        # ckpt_path = configs[name].repo_flow
-        # if (
-        #     ckpt_path is None
-        #     and configs[name].repo_id is not None
-        #     and configs[name].repo_flow is not None
-        #     and hf_download
-        # ):
         ckpt_path = hf_hub_download(configs[name].repo_id, configs[name].repo_flow)
     raw_weights = mx.load(ckpt_path)
         # 去除前缀（你可以修改为你实际需要移除的）
     clean_weights = strip_prefix(raw_weights, "model.diffusion_model.")
     weights = model.sanitize(clean_weights)
-        # weights = model.sanitize(weights)
     model.load_weights(list(weights.items()))
-
+    if  quantized:
+        nn.quantize(model, bits=8, group_size=64)
     return model
 
 
@@ -169,25 +161,20 @@ def load_t5(name: str= None, file_path:str = None, quantized: bool = False):
     # Make the T5 model
     config = T5Config.from_dict(t5_config)
     t5 = T5Encoder(config)
-    if quantized:
-        nn.quantize(t5, bits=4, group_size=32)
+    
     # Load the weights
     if file_path is not None:
-        if quantized:
-            weights = mx.load(file_path)
-        else:
-            model_index = file_path + "/model.safetensors.index.json"
-            print("T5 model index:",model_index)
-            weight_files = set()
-            with open(model_index) as f:
-                for _, w in json.load(f)["weight_map"].items():
-                    weight_files.add(w)
-            weights = {}
-            for w in weight_files:
-                w = f"{file_path}/{w}"
-                # w = hf_hub_download(configs[name].repo_id, w)
+        model_index = file_path + "/model.safetensors.index.json"
+        print("T5 model index:",model_index)
+        weight_files = set()
+        with open(model_index) as f:
+            for _, w in json.load(f)["weight_map"].items():
+                weight_files.add(w)
+        weights = {}
+        for w in weight_files:
+            w = f"{file_path}/{w}"
 
-                weights.update(mx.load(w))
+            weights.update(mx.load(w))
     else:
         model_index = hf_hub_download(
                 configs[name].repo_id, "t5/text_encoder_2/model.safetensors.index.json"
@@ -204,7 +191,8 @@ def load_t5(name: str= None, file_path:str = None, quantized: bool = False):
             weights.update(mx.load(w))
     weights = t5.sanitize(weights)
     t5.load_weights(list(weights.items()))
-
+    if quantized:
+        nn.quantize(t5, bits=8, group_size=64)
     return t5
 
 
