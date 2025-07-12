@@ -121,3 +121,36 @@ python txt2image.py \
     'Extreme close-up photograph of a single tiger eye, direct frontal view. The iris is very detailed and the pupil resembling a dark void. The word \"Chroma\" is across the lower portion of the image in large white stylized letters, with brush strokes resembling those made with Japanese calligraphy. Each strand of the thick fur is highly detailed and distinguishable. Natural lighting to capture authentic eye shine and depth.'
 
 ```
+
+LoRA
+------------
+
+**Training Tools** [ostris/ai-toolkit](https://github.com/ostris/ai-toolkit?tab=readme-ov-file#training-in-runpod)
+**Demo Lora** [style_scaramouche_chroma_lora](https://huggingface.co/jack813liu/style_scaramouche_chroma_lora)
+![Scaramouche Lora](./assets/lora.jpg)
+Prompt
+```text
+photorealistic beautiful girl as Diablo 2 sorceress sexy cosplay, attractive face with confident expression, 21 years old, long dark brown hair, slender and large breasts showing cleavage, fitted emerald green fantasy outfit with lots of  cutouts, shorter robe showing more leg, form-fitting corset emphasizing silhouette, bare midriff, ornate golden armor pieces, decorative belt with gemstones, holding wooden staff with glowing purple orb, confident alluring pose, cinematic lighting, high resolution photography style, detailed costume textures, form-fitting outfit, fitted clothing, body-conscious design, natural lighthing.
+```
+Negtive Prompt
+```text
+extra fingers, 6 fingers, multi hand, extra hand, painting, colored pencil, cel shading, oekaki, toony, multiple styles, watermark, transparent background, border, body horror, disembodied head, brain, bloodshot eyes, surreal, comic, skull head, fan character, anatomically inaccurate, deformed, disfigured, ugly, anatomical nonsense, duplicate, bad composition, smooth skin, shiny skin, glistening, render, fake, clay, HDR, out of focus, blurry, unclear, diffuse, foggy, censored, glossy body, white spots, glitch, heavy makeup, disfigured belly button, modern clothing, casual wear, bright lighting, cartoonish, low quality, distorted proportions, modern accessories, contemporary hairstyles, cartoon, anime, drawn, painted, illustrated, stylized, game art, digital art, 2d, flat, artificial skin, plastic skin, doll-like
+```
+
+**Load LoRA** 
+```shell
+python txt2image.py \
+    "prompt here" \
+--n-images 1 \
+--image-size 512x512 \
+--cfg 4 \
+--fuse-adapter \
+--adapter /Users/.../style_scaramouche_chroma_lora_v1_000002040.safetensors
+```
+
+Gradio
+---------
+![Gradio UI](./assets/gradio_ui.jpg)
+```shell
+python app.py
+```
