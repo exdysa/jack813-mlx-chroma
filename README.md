@@ -126,7 +126,9 @@ LoRA
 ------------
 
 **Training Tools** [ostris/ai-toolkit](https://github.com/ostris/ai-toolkit?tab=readme-ov-file#training-in-runpod)
+
 **Demo Lora** [style_scaramouche_chroma_lora](https://huggingface.co/jack813liu/style_scaramouche_chroma_lora)
+
 ![Scaramouche Lora](./assets/lora.jpg)
 Prompt
 ```text
