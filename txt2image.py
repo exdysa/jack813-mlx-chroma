@@ -2,6 +2,7 @@
 
 import argparse
 import time
+from chroma.lora import LoRALinear
 import mlx.core as mx
 import mlx.nn as nn
 import numpy as np
@@ -29,14 +30,38 @@ def quantization_predicate(name, m):
     return hasattr(m, "to_quantized") and m.weight.shape[1] % 512 == 0
 
 
-def load_adapter(flux, adapter_file, fuse=False):
+
+def load_adapter(chroma, adapter_file, fuse=False):
     weights, lora_config = mx.load(adapter_file, return_metadata=True)
-    rank = int(lora_config["lora_rank"])
-    num_blocks = int(lora_config["lora_blocks"])
-    flux.linear_to_lora_layers(rank, num_blocks)
-    flux.flow.load_weights(list(weights.items()), strict=False)
+    print('lora_config', lora_config)
+    # rank = int(lora_config["lora_rank"])
+    # rank = int(lora_config.get("ss_network_dim", 16))
+        # 自动推断
+    num_blocks = -1
+    a = weights["diffusion_model.double_blocks.0.img_mlp.2.lora_A.weight"]
+    b = weights["diffusion_model.double_blocks.0.img_mlp.2.lora_B.weight"]
+    rank = a.shape[0] if a.shape[0] == b.shape[1] else a.shape[1]
+    # print("Detected LoRA rank:", r)
+    print(f"[INFO] Using LoRA rank: {rank}")
+    chroma.linear_to_lora_layers(rank, num_blocks)
+    # 调试类型
+
+    new_weights = {}
+    for k, v in weights.items():
+        # 删除前缀 diffusion_model.
+        if k.startswith("diffusion_model."):
+            new_k = k[len("diffusion_model."):]
+        else:
+            new_k = k
+        # 替换 .lora_A.weight -> .lora_a
+        new_k = new_k.replace(".txt_mlp", ".txt_mlp.layers")
+        new_k = new_k.replace(".img_mlp", ".img_mlp.layers")
+        new_k = new_k.replace(".lora_A.weight", ".lora_a")
+        new_k = new_k.replace(".lora_B.weight", ".lora_b")
+        new_weights[new_k] = v
+    chroma.flow.load_weights(list(new_weights.items()), strict=False)
     if fuse:
-        flux.fuse_lora_layers()
+        chroma.fuse_lora_layers()
 
 
 if __name__ == "__main__":
@@ -46,7 +71,7 @@ if __name__ == "__main__":
     parser.add_argument("prompt")
     parser.add_argument("--neg-prompt", default="")
     parser.add_argument("--download-hf", type=bool, default=False)
-    parser.add_argument("--chroma-path", default="./models/chroma/chroma-unlocked-v36-detail-calibrated.safetensors")
+    parser.add_argument("--chroma-path", default="./models/chroma/chroma.safetensors")
     parser.add_argument("--t5-path", default="./models/t5/text_encoder_2")
     parser.add_argument("--tokenizer-path", default="./models/t5/tokenizer_2")
     parser.add_argument("--vae-path", default="./models/vae")
@@ -66,15 +91,16 @@ if __name__ == "__main__":
     parser.add_argument("--seed", type=int, default=666)
 
     parser.add_argument("--verbose", "-v", action="store_true")
-    # parser.add_argument("--adapter")
-    # parser.add_argument("--fuse-adapter", action="store_true")
+    parser.add_argument("--adapter")
+    parser.add_argument("--fuse-adapter", action="store_true")
     # parser.add_argument("--no-t5-padding", dest="t5_padding", action="store_false")
     args = parser.parse_args()
-    print(args.n_images)
+    # print(args.n_images)
     # Load the models
 
     chroma = ChromaPipeline("chroma", download_hf=args.download_hf, chroma_filepath=args.chroma_path, t5_filepath=args.t5_path, tokenizer_filepath=args.tokenizer_path, vae_filepath=args.vae_path, load_quantized=args.quantize)
-    
+    if args.adapter:
+        load_adapter(chroma, args.adapter, fuse=args.fuse_adapter)
     if args.preload_models:
         chroma.ensure_models_are_loaded()
 

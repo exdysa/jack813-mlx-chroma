@@ -5,3 +5,4 @@ numpy
 tqdm
 Pillow
 sentencepiece
+gradio

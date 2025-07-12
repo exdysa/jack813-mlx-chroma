@@ -4,6 +4,7 @@ from typing import Tuple
 import numpy as np
 
 from chroma.chromasampler import ChromaSampler
+from chroma.lora import LoRALinear
 import mlx.core as mx
 import mlx.nn as nn
 from mlx.utils import tree_unflatten
@@ -190,6 +191,39 @@ class ChromaPipeline:
         x = self.ae.decode(x)
         x = mx.clip(x + 1, 0, 2) * 0.5
         return x
+    
+
+
+    
+    def linear_to_lora_layers(self, rank: int = 8, num_blocks: int = -1):
+        """Swap the linear layers in the transformer blocks with LoRA layers."""
+        all_blocks = self.flow.double_blocks + self.flow.single_blocks
+        all_blocks.reverse()
+        num_blocks = num_blocks if num_blocks > 0 else len(all_blocks)
+        
+        for i, block in zip(range(num_blocks), all_blocks):
+            # replace_linear_recursive_mlx(block, rank)
+            loras = []
+            for name, module in block.named_modules():
+               
+                if isinstance(module, nn.Linear):
+                    
+                    # print(f"add {name} LoRALinear")
+                    loras.append((name, LoRALinear.from_base(module, r=rank)))
+                 
+            block.update_modules(tree_unflatten(loras))
+            
+            
+
+    def fuse_lora_layers(self):
+        fused_layers = []
+        for name, module in self.flow.named_modules():
+            if isinstance(module, LoRALinear):
+                print(f"[CHECK] Found LoRA layer at: {name}")
+                print(f"  - lora_a Mean(abs): {mx.mean(mx.abs(module.lora_a)).item():.6f}")
+                print(f"  - lora_b Mean(abs): {mx.mean(mx.abs(module.lora_b)).item():.6f}")
+                fused_layers.append((name, module.fuse()))
+        self.flow.update_modules(tree_unflatten(fused_layers))
 
     # def generate_images(
     #     self,
@@ -221,3 +255,16 @@ class ChromaPipeline:
         
     #     mx.eval(images)
     #     return images
+
+def set_module_by_path(root, path, new_module):
+    parts = path.split(".")
+    for p in parts[:-1]:
+        if p.isdigit():
+            root = root[int(p)]
+        else:
+            root = getattr(root, p)
+    last = parts[-1]
+    if last.isdigit():
+        root[int(last)] = new_module
+    else:
+        setattr(root, last, new_module)
