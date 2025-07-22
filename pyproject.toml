@@ -1,0 +1,20 @@
+[project]
+name            = "jack813-mlx-chroma"
+version         = "0.1.0"
+description     = "Add your description here"
+readme          = "README.md"
+requires-python = ">=3.13"
+dependencies    = [
+    "gradio>=5.38.0",
+    "huggingface-hub[hf-transfer,hf-xet]>=0.33.4",
+    "mlx>=0.18.1",
+    "numpy>=2.3.1",
+    "pillow>=11.3.0",
+    "regex>=2024.11.6",
+    "sentencepiece>=0.2.1 ; python_full_version < '3.13'",
+    "sentencepiece ; python_full_version >= '3.13'",
+    "tqdm>=4.67.1",
+]
+
+[tool.uv.sources]
+sentencepiece = { git = "https://github.com/google/sentencepiece.git", subdirectory = "python" }
