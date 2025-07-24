@@ -18,10 +18,7 @@ def to_latent_size(image_size):
     w = ((w + 15) // 16) * 16
 
     if (h, w) != image_size:
-        print(
-            "Warning: The image dimensions need to be divisible by 16px. "
-            f"Changing size to {w}x{h}."
-        )
+        print(f"Warning: The image dimensions need to be divisible by 16px. Changing size to {w}x{h}.")
 
     return (h // 8, w // 8)
 
@@ -30,13 +27,12 @@ def quantization_predicate(name, m):
     return hasattr(m, "to_quantized") and m.weight.shape[1] % 512 == 0
 
 
-
 def load_adapter(chroma, adapter_file, fuse=False):
     weights, lora_config = mx.load(adapter_file, return_metadata=True)
-    print('lora_config', lora_config)
+    print("lora_config", lora_config)
     # rank = int(lora_config["lora_rank"])
     # rank = int(lora_config.get("ss_network_dim", 16))
-        # 自动推断
+    # 自动推断
     num_blocks = -1
     a = weights["diffusion_model.double_blocks.0.img_mlp.2.lora_A.weight"]
     b = weights["diffusion_model.double_blocks.0.img_mlp.2.lora_B.weight"]
@@ -50,7 +46,7 @@ def load_adapter(chroma, adapter_file, fuse=False):
     for k, v in weights.items():
         # 删除前缀 diffusion_model.
         if k.startswith("diffusion_model."):
-            new_k = k[len("diffusion_model."):]
+            new_k = k[len("diffusion_model.") :]
         else:
             new_k = k
         # 替换 .lora_A.weight -> .lora_a
@@ -65,21 +61,17 @@ def load_adapter(chroma, adapter_file, fuse=False):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Generate images from a textual prompt using stable diffusion"
-    )
+    parser = argparse.ArgumentParser(description="Generate images from a textual prompt using stable diffusion")
     parser.add_argument("prompt")
     parser.add_argument("--neg-prompt", default="")
     parser.add_argument("--download-hf", type=bool, default=False)
-    parser.add_argument("--chroma-path", default="./models/chroma/chroma.safetensors")
-    parser.add_argument("--t5-path", default="./models/t5/text_encoder_2")
-    parser.add_argument("--tokenizer-path", default="./models/t5/tokenizer_2")
-    parser.add_argument("--vae-path", default="./models/vae")
+    parser.add_argument("--chroma_path", default="./models/chroma/chroma.safetensors")
+    parser.add_argument("--t5_path", default="./models/t5/text_encoder_2")
+    parser.add_argument("--tokenizer_path", default="./models/t5/tokenizer_2")
+    parser.add_argument("--vae_path", default="./models/vae")
     parser.add_argument("--n-images", type=int, default=1)
-    parser.add_argument(
-        "--image-size", type=lambda x: tuple(map(int, x.split("x"))), default=(512, 512)
-    )
-    parser.add_argument("--steps", type=int,default=28)
+    parser.add_argument("--image_size", type=lambda x: tuple(map(int, x.split("x"))), default=(512, 512))
+    parser.add_argument("--steps", type=int, default=28)
     parser.add_argument("--cfg", type=float, default=4.0)
     parser.add_argument("--skip-cfg-steps", type=int, default=0)
     parser.add_argument("--n-rows", type=int, default=1)
@@ -98,7 +90,15 @@ if __name__ == "__main__":
     # print(args.n_images)
     # Load the models
 
-    chroma = ChromaPipeline("chroma", download_hf=args.download_hf, chroma_filepath=args.chroma_path, t5_filepath=args.t5_path, tokenizer_filepath=args.tokenizer_path, vae_filepath=args.vae_path, load_quantized=args.quantize)
+    chroma = ChromaPipeline(
+        "chroma",
+        download_hf=args.download_hf,
+        chroma_filepath=args.chroma_path,
+        t5_filepath=args.t5_path,
+        tokenizer_filepath=args.tokenizer_path,
+        vae_filepath=args.vae_path,
+        load_quantized=args.quantize,
+    )
     if args.adapter:
         load_adapter(chroma, args.adapter, fuse=args.fuse_adapter)
     if args.preload_models:
@@ -113,9 +113,8 @@ if __name__ == "__main__":
         num_steps=args.steps,
         latent_size=latent_size,
         seed=args.seed,
-        first_n_steps_without_cfg = args.skip_cfg_steps,
+        first_n_steps_without_cfg=args.skip_cfg_steps,
         cfg=args.cfg,
-
     )
 
     # First we get and eval the conditioning
@@ -127,7 +126,7 @@ if __name__ == "__main__":
     # The following is not necessary but it may help in memory constrained
     # systems by reusing the memory kept by the text encoders.
     del chroma.t5
-    
+
     start = time.perf_counter()
     # Actual denoising loop
     for x_t in tqdm(latents, total=args.steps):
@@ -145,9 +144,7 @@ if __name__ == "__main__":
         decoded.append(chroma.decode(x_t[i : i + args.decoding_batch_size], latent_size))
         mx.eval(decoded[-1])
     peak_mem_decoding = mx.get_peak_memory() / 1024**3
-    peak_mem_overall = max(
-        peak_mem_conditioning, peak_mem_generation, peak_mem_decoding
-    )
+    peak_mem_overall = max(peak_mem_conditioning, peak_mem_generation, peak_mem_decoding)
 
     if args.save_raw:
         *name, suffix = args.output.split(".")
